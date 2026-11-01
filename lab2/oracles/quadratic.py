@@ -9,21 +9,27 @@ class QuadraticOracle(Oracle):
     обусловленности kappa = L / mu.
     """
 
-    def __init__(self, dim: int = 100, kappa: float = 100.0,
-                 L: float = 1.0, seed: int = 0):
+    def __init__(self, dim: int = 2, n_periods: int = 300, seed: int = 0):
         rng = np.random.default_rng(seed)
-        Q, _ = np.linalg.qr(rng.standard_normal((dim, dim)))
-        mu = L / kappa
-        eigs = rng.uniform(mu, L, dim)
-        eigs[0], eigs[-1] = mu, L
-        eigs = np.sort(eigs)
-        A = Q @ np.diag(eigs) @ Q.T
-        self.A = 0.5 * (A + A.T)
-        self.b = rng.standard_normal(dim)
+        
+        mu_true = rng.uniform(0.0005, 0.002, dim)
+        beta = rng.uniform(0.8, 1.5, dim)
+        
+        z = rng.normal(0, 0.01, n_periods)
+        epsilon = rng.normal(0, 0.005, (n_periods, dim))
+        
+        r = mu_true + np.outer(z, beta) + epsilon
+        
+        self.b = np.mean(r, axis=0)
+        cov = np.cov(r, rowvar=False)
+        self.A = cov + 1e-6 * np.eye(dim)
+        
         self.dim = dim
-        self.name = f"quadratic(dim={dim}, kappa={kappa:g})"
-        self._L = L
-        self._mu = mu
+        self.name = f"markowitz(dim={dim}, periods={n_periods})"
+        
+        eigs = np.linalg.eigvalsh(self.A)
+        self._L = eigs.max()
+        self._mu = eigs.min()
         self._x_star = np.linalg.solve(self.A, self.b)
         self._f_star = 0.5 * self._x_star @ self.A @ self._x_star - self.b @ self._x_star
 
