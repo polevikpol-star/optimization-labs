@@ -37,8 +37,6 @@ def distance_to_opt(oracle, x: np.ndarray) -> float | None:
 
 def condition_number(oracle, x: np.ndarray) -> float | None:
     """Local condition number from Hessian, if available."""
-    if not oracle.has_hess:
-        return None
     H = oracle.hess(x)
     eigvals = np.linalg.eigvalsh(H)
     if eigvals.min() <= 0:
@@ -57,7 +55,7 @@ def iterations_to_tol(history, tol: float = 1e-6) -> int | None:
 def summarize(history, oracle=None, tol: float = 1e-6) -> dict:
     """Standard summary dict for logs and tables."""
     out = {
-        "n_iter": len(history.f),
+        "n_iter": max(len(history.f) - 1, 0),
         "f_final": history.f[-1] if history.f else None,
         "grad_norm_final": history.grad_norm[-1] if history.grad_norm else None,
         "iters_to_tol": iterations_to_tol(history, tol),
