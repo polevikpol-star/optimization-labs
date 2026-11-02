@@ -1,12 +1,3 @@
-"""Дополнение к блоку 6: чувствительность Марковица к параметрам и старту.
-
-Разместить в lab2/scripts/parameter_sensitivity.py.
-Из каталога lab2 запустить: python -m scripts.parameter_sensitivity
-
-Применяются оригинальные QuadraticOracle и GD команды, а также
-MarkowitzConditionOracle из scripts/condition_analysis.py.
-"""
-
 import csv
 from pathlib import Path
 
@@ -23,7 +14,6 @@ MAX_ITER = 5000
 
 
 def run_gd(oracle, start, step):
-    """Запуск готового GD команды с единым критерием остановки."""
     history = GD(oracle, step=step, max_iter=MAX_ITER, tol=TOL).run(start)
     x_final = np.asarray(history.x[-1])
     converged = float(history.grad_norm[-1]) <= TOL
@@ -38,7 +28,6 @@ def write_csv(path, rows):
 
 
 def lambda_experiment(sigma, mu, step, output_dir):
-    """Изменяется только коэффициент важности доходности lambda."""
     rows = []
     exact_points = []
     for lam in [0.5, 1.0, 2.0]:
@@ -60,7 +49,6 @@ def lambda_experiment(sigma, mu, step, output_dir):
         assert np.linalg.norm(x_final - x_star) <= 1.1 * TOL / oracle.info.mu
     write_csv(output_dir / "lambda_results.csv", rows)
 
-    # Проверка аналитического свойства: при удвоении lambda удваивается w*.
     np.testing.assert_allclose(exact_points[2], 2 * exact_points[1], rtol=1e-10)
     np.testing.assert_allclose(exact_points[0], .5 * exact_points[1], rtol=1e-10)
 
@@ -82,7 +70,6 @@ def lambda_experiment(sigma, mu, step, output_dir):
 
 
 def initial_point_experiment(sigma, mu, step, output_dir):
-    """Меняется только w0; функция и ее аналитический минимум фиксированы."""
     oracle = MarkowitzConditionOracle(sigma, mu)
     starts = [("(0, 0)", np.array([0., 0.])),
               ("(5, -5)", np.array([5., -5.])),
@@ -107,7 +94,6 @@ def initial_point_experiment(sigma, mu, step, output_dir):
         assert np.linalg.norm(x_final - oracle.info.x_star) <= 1.1 * TOL / oracle.info.mu
     write_csv(output_dir / "initial_points_results.csv", rows)
 
-    # Геометрия f(w)-f*: она неотрицательна и дает эллиптические линии уровня.
     all_points = np.vstack([np.asarray(oracle.info.x_star)[None, :]] + [p for _, p, _ in histories])
     xmin, xmax = all_points[:, 0].min(), all_points[:, 0].max()
     ymin, ymax = all_points[:, 1].min(), all_points[:, 1].max()
@@ -125,7 +111,6 @@ def initial_point_experiment(sigma, mu, step, output_dir):
     cs = plt.contour(xx, yy, gap, levels=levels, alpha=0.7)
     plt.clabel(cs, inline=True, fontsize=7, fmt="%.2g")
     for label, points, history in histories:
-        # Не перегружаем линии метками, но показываем старт каждой траектории.
         plt.plot(points[:, 0], points[:, 1], linewidth=2,
                  label="Старт {}: {} шагов".format(label, len(history.f)-1))
         plt.scatter(points[0, 0], points[0, 1], s=48)
@@ -157,7 +142,6 @@ def initial_point_experiment(sigma, mu, step, output_dir):
 
 
 def covariance_experiment(sigma, mu, output_dir):
-    """Дополнительно: меняем обусловленность Sigma и наблюдаем сдвиг w*."""
     vals, vectors = np.linalg.eigh(sigma)
     L = float(vals[-1])
     base_kappa = L / float(vals[0])
