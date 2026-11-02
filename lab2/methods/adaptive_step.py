@@ -36,11 +36,16 @@ class AdaptiveStep(Method):
             return self._eta
         s = x - self._prev_x
         y = g - self._prev_grad
+        sy = float(s @ y)
+        if sy <= 0.0:
+            # нет информации о кривизне: оставляем прошлый шаг
+            return self._eta
         if mode == 1:
-            denom = float(s @ y) + 1e-12
-            return float(s @ s) / denom
-        denom = float(y @ y) + 1e-12
-        return float(s @ y) / denom
+            return float(s @ s) / sy
+        yy = float(y @ y)
+        if yy <= 0.0:
+            return self._eta
+        return sy / yy
 
     def _backtrack(self, x, g, direction) -> float:
         eta = self._eta * 2.0  # даём шагу шанс вырасти
