@@ -1,13 +1,12 @@
 oracle:
   type: quadratic
   dim: 50
-  kappa: 1000
   seed: 0
 
 method:
   type: adaptive
   strategy: bb1
-  eta0: 0.01
+  eta0: 130.88346993221023
   max_iter: 10000
   tol: 1.0e-5
 
