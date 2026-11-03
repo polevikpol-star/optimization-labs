@@ -3,7 +3,7 @@ from .base import Method
 
 
 class AdaptiveStep(Method):
-    """Обёртка над любым методом с адаптивным шагом.
+    """Обертка над любым методом с адаптивным шагом.
 
     Стратегии:
       'polyak'     — eta = (f(x) - f*) / ||grad||^2
@@ -28,7 +28,9 @@ class AdaptiveStep(Method):
         f_star = self.oracle.info.f_star
         if f_star is None:
             return self._eta
-        denom = float(g @ g) + 1e-12
+        denom = float(g @ g)
+        if denom == 0.0:
+            return self._eta
         return max((f - f_star) / denom, 1e-12)
 
     def _bb(self, x, g, mode: int) -> float:
@@ -48,7 +50,7 @@ class AdaptiveStep(Method):
         return sy / yy
 
     def _backtrack(self, x, g, direction) -> float:
-        eta = self._eta * 2.0  # даём шагу шанс вырасти
+        eta = self._eta * 2.0  # даем шагу шанс вырасти
         fx = self.oracle.f(x)
         gx = float(g @ direction)  # = -||g||^2
         for _ in range(50):
