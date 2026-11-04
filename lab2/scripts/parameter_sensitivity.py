@@ -140,44 +140,6 @@ def initial_point_experiment(sigma, mu, step, output_dir):
     plt.close()
     return rows
 
-
-def covariance_experiment(sigma, mu, output_dir):
-    vals, vectors = np.linalg.eigh(sigma)
-    L = float(vals[-1])
-    base_kappa = L / float(vals[0])
-    kappa_values = [base_kappa, 10.0, 50.0, 100.0]
-    base_star = np.linalg.solve(sigma, mu)
-    rows = []
-    for i, kappa in enumerate(kappa_values):
-        if i == 0:
-            A = sigma.copy()
-        else:
-            A = vectors @ np.diag([L / kappa, L]) @ vectors.T
-            A = 0.5 * (A + A.T)
-        x_star = np.linalg.solve(A, mu)
-        rows.append({"kappa": float(np.linalg.cond(A)),
-                     "lambda_min": float(np.linalg.eigvalsh(A)[0]),
-                     "lambda_max": float(np.linalg.eigvalsh(A)[-1]),
-                     "w1_exact": float(x_star[0]),
-                     "w2_exact": float(x_star[1]),
-                     "distance_from_base_optimum": float(np.linalg.norm(x_star - base_star))})
-    write_csv(output_dir / "covariance_results.csv", rows)
-
-    plt.figure(figsize=(8, 5))
-    xs = [r["kappa"] for r in rows]
-    plt.plot(xs, [r["w1_exact"] for r in rows], "o-", label="w1, точный оптимум")
-    plt.plot(xs, [r["w2_exact"] for r in rows], "s-", label="w2, точный оптимум")
-    plt.xlabel("Число обусловленности kappa")
-    plt.ylabel("Оптимальные позиции")
-    plt.title("Изменение оптимума при изменении ковариационной матрицы")
-    plt.grid(alpha=0.3)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(output_dir / "covariance_sensitivity.png", dpi=180)
-    plt.close()
-    return rows
-
-
 def main():
     base = QuadraticOracle(dim=2, n_periods=300, seed=0)
     sigma = base.A.copy()
@@ -202,11 +164,6 @@ def main():
     for row in initial_point_experiment(sigma, mu, step, output_dir):
         print("w0={} | шагов={} | расстояние до w*={:.3e} | сошелся={}".format(
             row["start"], row["iterations"], row["distance_to_exact"], row["converged"]))
-
-    print("\n3. ВЛИЯНИЕ КОВАРИАЦИОННОЙ МАТРИЦЫ")
-    for row in covariance_experiment(sigma, mu, output_dir):
-        print("kappa={:.2f} | w* = ({:.4f}, {:.4f}) | сдвиг относительно исходного={:.4f}".format(
-            row["kappa"], row["w1_exact"], row["w2_exact"], row["distance_from_base_optimum"]))
 
     print("\nТаблицы и графики сохранены:", output_dir)
 
