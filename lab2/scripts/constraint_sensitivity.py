@@ -1,11 +1,3 @@
-"""ЛР3: влияние ограничений на решение модели Марковица.
-
-Поместить в lab2/scripts/constraint_sensitivity.py.
-Запуск из lab2/: python -m scripts.constraint_sensitivity
-
-Используются данные и формулы командного ConstrainedMarkowitzOracle.
-Эталонные решения вычисляются SLSQP, а не Projected GD.
-"""
 import csv
 from pathlib import Path
 
@@ -19,7 +11,7 @@ from oracles.constrained_markowitz import ConstrainedMarkowitzOracle
 DIM = 12
 PERIODS = 300
 SEED = 0
-LAM = 0.05  # Фиксируем для всех опытов: видна чувствительность доходности к ограничениям
+LAM = 0.05  
 BASE_CAP = 0.25
 OUT = Path(__file__).resolve().parents[1] / "results" / "constraint_sensitivity"
 
@@ -30,7 +22,6 @@ def make_oracle(cap=BASE_CAP, r_min=None, risk_max=None):
 
 
 def initial_feasible_point(oracle):
-    """Ищем допустимую точку линейным программированием (без ограничения риска)."""
     cons = []
     if oracle.r_min is not None:
         cons.append((-oracle.b.reshape(1, -1), np.array([-oracle.r_min])))
@@ -45,10 +36,6 @@ def initial_feasible_point(oracle):
 
 
 def solve_portfolio(oracle, objective="markowitz", start=None):
-    """Масштабируем целевую функцию и ограничения для устойчивого SLSQP.
-
-    Возвращает (веса, результат solver) или (None, результат) при неудаче.
-    """
     if oracle.dim * oracle.w_max < 1 - 1e-12:
         return None, None
     w0 = initial_feasible_point(oracle)
@@ -74,7 +61,6 @@ def solve_portfolio(oracle, objective="markowitz", start=None):
         raise ValueError("Unknown objective")
     starts = [w0, np.full(oracle.dim, 1 / oracle.dim)]
     if oracle.risk_max is not None:
-        # Найдем допустимый старт по риску через задачу минимизации дисперсии.
         oracle_without_risk = make_oracle(cap=oracle.w_max, r_min=oracle.r_min)
         w_safe, _ = solve_portfolio(oracle_without_risk, objective="min_risk")
         if w_safe is not None:
@@ -103,7 +89,6 @@ def max_return(oracle):
 
 
 def result_row(experiment, setting, oracle, reference_w, proof=None):
-    """Сначала доказываем несовместность через границы, а не ошибку solver."""
     if proof is not None:
         return {"experiment": experiment, "setting": setting, "status": "infeasible_proven",
                 "reason": proof}
@@ -171,7 +156,6 @@ def draw(experiment, rows, x_label, filename, reference_w, baseline_return):
     fig.savefig(OUT / filename, dpi=180)
     plt.close(fig)
 
-    # Позиции всех активов: видно, как меняется сам портфель, не только доходность и риск.
     weights = np.array([[float(z) for z in r["weights"].split(";")] for r in good])
     fig2, ax2 = plt.subplots(figsize=(10, 5))
     image = ax2.imshow(weights.T, aspect="auto", origin="lower", interpolation="nearest")
