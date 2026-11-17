@@ -11,10 +11,9 @@ class ProjectedGradientDescent:
         self.tol = tol
         self.max_iter = max_iter
         
-        # Берем шаг 1/L из матрицы A (это ковариационная матрица внутри оракула)
         if eta is None:
             L = np.max(np.linalg.eigvalsh(oracle.A))
-            self.eta = 1.0 / L
+            self.eta = 0.2/ L
         else:
             self.eta = eta
 
@@ -24,7 +23,6 @@ class ProjectedGradientDescent:
         history_dist = []
         
         for i in range(self.max_iter):
-            # Обращаемся к градиенту внутри оракула
             grad = self.oracle.grad(w) 
             w_step = w - self.eta * grad
             w_new = project_simplex(w_step)
