@@ -24,7 +24,7 @@ class ProjectedGradientDescent:
         history_dist = []
         
         for i in range(self.max_iter):
-            # Обращаемся к градиенту внутри оракула!
+            # Обращаемся к градиенту внутри оракула
             grad = self.oracle.grad(w) 
             w_step = w - self.eta * grad
             w_new = project_simplex(w_step)
