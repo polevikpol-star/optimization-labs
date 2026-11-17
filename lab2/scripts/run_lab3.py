@@ -8,7 +8,7 @@ from oracles.constrained_markowitz import ConstrainedMarkowitzOracle
 from methods.projected_gd import ProjectedGradientDescent
 
 
-oracle = ConstrainedMarkowitzOracle(dim=2, n_periods=300, seed=42, lam=1.0, w_max=1.0)
+oracle = ConstrainedMarkowitzOracle(dim=2, n_periods=300, seed=10, lam=1.0, w_max=1.0)
 
 w0 = np.array([0.5, 0.5])
 
