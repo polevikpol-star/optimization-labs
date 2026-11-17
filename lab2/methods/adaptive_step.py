@@ -28,8 +28,10 @@ class AdaptiveStep(Method):
         f_star = self.oracle.info.f_star
         if f_star is None:
             return self._eta
-        denom = float(g @ g) + 1e-12
-        return max((f - f_star) / denom, 1e-12)
+        gg = float(g @ g)
+        if gg <= 0.0:
+            return self._eta
+        return max((f - f_star) / gg, 1e-12)
 
     def _bb(self, x, g, mode: int) -> float:
         if self._prev_grad is None:
